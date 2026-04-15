@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Người dùng - Office Chatbot</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="app-layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>🏢 Office Chatbot</h2>
+        <p class="user-name" id="userName">Đang tải...</p>
+        <p class="user-role" id="userRole"></p>
+      </div>
+      <div class="sidebar-nav">
+        <a href="/chat.html">💬 Chatbot</a>
+        <a href="/meetings.html">📅 Lịch họp</a>
+        <a href="/users.html" class="active admin-only">👥 Người dùng</a>
+        <a href="/rooms.html" class="admin-only">🏠 Phòng họp</a>
+      </div>
+      <div class="sidebar-footer">
+        <a href="#" onclick="logout()" style="color:var(--gray-300);">🚪 Đăng xuất</a>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1>👥 Quản lý người dùng</h1>
+        <button class="btn btn-primary" onclick="openCreateModal()">+ Thêm người dùng</button>
+      </div>
+
+      <div id="usersContent">
+        <div class="loading-overlay">
+          <div class="loading-spinner"></div>
+          <span>Đang tải dữ liệu...</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal tạo/sửa người dùng -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Thêm người dùng mới</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="userForm">
+          <div class="form-group">
+            <label for="userFullName">Họ và tên</label>
+            <input type="text" id="userFullName" placeholder="Nhập họ và tên" required>
+          </div>
+          <div class="form-group">
+            <label for="userEmail">Email</label>
+            <input type="email" id="userEmail" placeholder="Nhập email" required>
+          </div>
+          <div class="form-group" id="passwordGroup">
+            <label for="userPassword">Mật khẩu</label>
+            <input type="password" id="userPassword" placeholder="Nhập mật khẩu" minlength="6">
+          </div>
+          <div class="form-group">
+            <label for="userRole">Vai trò</label>
+            <select id="userRole">
+              <option value="user">Người dùng</option>
+              <option value="admin">Quản trị viên</option>
+            </select>
+          </div>
+          <input type="hidden" id="userId">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveUser()">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/config.js"></script>
+  <script src="/js/users.js"></script>
+</body>
+</html>

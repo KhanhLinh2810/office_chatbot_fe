@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lịch họp - Office Chatbot</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="app-layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>🏢 Office Chatbot</h2>
+        <p class="user-name" id="userName">Đang tải...</p>
+        <p class="user-role" id="userRole"></p>
+      </div>
+      <div class="sidebar-nav">
+        <a href="/chat.html">💬 Chatbot</a>
+        <a href="/meetings.html" class="active">📅 Lịch họp</a>
+        <a href="/users.html" class="admin-only">👥 Người dùng</a>
+        <a href="/rooms.html" class="admin-only">🏠 Phòng họp</a>
+      </div>
+      <div class="sidebar-footer">
+        <a href="#" onclick="logout()" style="color:var(--gray-300);">🚪 Đăng xuất</a>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1>📅 Quản lý lịch họp</h1>
+        <button class="btn btn-primary" onclick="openCreateModal()">+ Tạo cuộc họp</button>
+      </div>
+
+      <div id="meetingsContent">
+        <div class="loading-overlay">
+          <div class="loading-spinner"></div>
+          <span>Đang tải dữ liệu...</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal tạo/sửa cuộc họp -->
+  <div class="modal-overlay" id="meetingModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Tạo cuộc họp mới</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="meetingForm">
+          <div class="form-group">
+            <label for="meetingTitle">Tiêu đề</label>
+            <input type="text" id="meetingTitle" placeholder="Nhập tiêu đề cuộc họp" required>
+          </div>
+          <div class="form-group">
+            <label for="meetingDescription">Mô tả</label>
+            <textarea id="meetingDescription" rows="3" placeholder="Mô tả cuộc họp"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="meetingRoom">Phòng họp</label>
+            <select id="meetingRoom" required>
+              <option value="">-- Chọn phòng --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="meetingStart">Thời gian bắt đầu</label>
+            <input type="datetime-local" id="meetingStart" required>
+          </div>
+          <div class="form-group">
+            <label for="meetingEnd">Thời gian kết thúc</label>
+            <input type="datetime-local" id="meetingEnd" required>
+          </div>
+          <input type="hidden" id="meetingId">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveMeeting()">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/config.js"></script>
+  <script src="/js/meetings.js"></script>
+</body>
+</html>

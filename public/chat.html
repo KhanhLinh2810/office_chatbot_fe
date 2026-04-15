@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot - Office Chatbot</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="app-layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>🏢 Office Chatbot</h2>
+        <p class="user-name" id="userName">Đang tải...</p>
+        <p class="user-role" id="userRole"></p>
+      </div>
+      <div class="sidebar-nav">
+        <a href="/chat.html" class="active">💬 Chatbot</a>
+        <a href="/meetings.html">📅 Lịch họp</a>
+        <a href="/users.html" class="admin-only">👥 Người dùng</a>
+        <a href="/rooms.html" class="admin-only">🏠 Phòng họp</a>
+      </div>
+      <div class="sidebar-footer">
+        <a href="#" onclick="logout()" style="color:var(--gray-300);">🚪 Đăng xuất</a>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="message bot">
+            Xin chào! Tôi là trợ lý Office Chatbot. Tôi có thể giúp bạn quản lý lịch họp, phòng họp và nhiều thứ khác. Hãy hỏi tôi bất cứ điều gì!
+            <span class="time">Bây giờ</span>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." 
+                 onkeypress="if(event.key==='Enter')sendMessage()">
+          <button class="btn btn-primary" onclick="sendMessage()">Gửi</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/config.js"></script>
+  <script src="/js/chat.js"></script>
+</body>
+</html>
