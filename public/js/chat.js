@@ -93,7 +93,7 @@ async function handleMeetingQuery(text) {
       return 'Hiện tại không có cuộc họp nào được lên lịch.';
     }
     const list = meetings.slice(0, 5).map((m) => {
-      const start = new Date(m.start_time).toLocaleString('vi-VN');
+      const start = new Date(m.start_at).toLocaleString('vi-VN');
       return `• <b>${m.title}</b> - ${start}`;
     });
     return `Danh sách cuộc họp gần đây:\n${list.join('\n')}`;

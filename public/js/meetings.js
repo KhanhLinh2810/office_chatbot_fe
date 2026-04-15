@@ -49,13 +49,19 @@ function renderMeetings(meetings) {
   }
 
   const rows = meetings.map((m) => {
-    const start = new Date(m.start_time).toLocaleString('vi-VN');
-    const end = new Date(m.end_time).toLocaleString('vi-VN');
+    const start = new Date(m.start_at).toLocaleString('vi-VN');
+    const end = new Date(m.end_at).toLocaleString('vi-VN');
+    const typeLabel = MEETING_TYPE_LABEL[m.type] || 'Không rõ';
+    const statusLabel = MEETING_STATUS_LABEL[m.status] || 'Không rõ';
+    const statusClass = m.status === MEETING_STATUS.SCHEDULED ? 'badge-active'
+      : m.status === MEETING_STATUS.CANCELED ? 'badge-inactive' : 'badge-admin';
     return `<tr>
       <td>${m.title || ''}</td>
       <td>${m.description || ''}</td>
+      <td>${typeLabel}</td>
       <td>${start}</td>
       <td>${end}</td>
+      <td><span class="badge ${statusClass}">${statusLabel}</span></td>
       <td>
         <div class="actions-cell">
           <button class="btn btn-sm btn-outline" onclick="editMeeting('${m.id}')">Sửa</button>
@@ -72,8 +78,10 @@ function renderMeetings(meetings) {
           <tr>
             <th>Tiêu đề</th>
             <th>Mô tả</th>
+            <th>Loại</th>
             <th>Bắt đầu</th>
             <th>Kết thúc</th>
+            <th>Trạng thái</th>
             <th>Thao tác</th>
           </tr>
         </thead>
@@ -85,7 +93,7 @@ function renderMeetings(meetings) {
 // Tải danh sách phòng cho dropdown
 async function loadRoomsForSelect() {
   try {
-    const rooms = await apiCall('/rooms/');
+    const rooms = await apiCall('/rooms/?status=1');
     const select = document.getElementById('meetingRoom');
     select.innerHTML = '<option value="">-- Chọn phòng --</option>';
     (rooms || []).forEach((r) => {
@@ -123,15 +131,18 @@ async function editMeeting(id) {
     document.getElementById('meetingTitle').value = meeting.title || '';
     document.getElementById('meetingDescription').value = meeting.description || '';
     // Định dạng datetime-local
-    if (meeting.start_time) {
-      document.getElementById('meetingStart').value = meeting.start_time.slice(0, 16);
+    if (meeting.start_at) {
+      document.getElementById('meetingStart').value = meeting.start_at.slice(0, 16);
     }
-    if (meeting.end_time) {
-      document.getElementById('meetingEnd').value = meeting.end_time.slice(0, 16);
+    if (meeting.end_at) {
+      document.getElementById('meetingEnd').value = meeting.end_at.slice(0, 16);
     }
     await loadRoomsForSelect();
     if (meeting.room_id) {
       document.getElementById('meetingRoom').value = meeting.room_id;
+    }
+    if (meeting.type !== undefined) {
+      document.getElementById('meetingType').value = meeting.type;
     }
     document.getElementById('meetingModal').classList.add('active');
   } catch (error) {
@@ -142,13 +153,15 @@ async function editMeeting(id) {
 // Lưu cuộc họp (tạo mới hoặc cập nhật)
 async function saveMeeting() {
   const id = document.getElementById('meetingId').value;
+  const roomVal = document.getElementById('meetingRoom').value;
   const body = {
     title: document.getElementById('meetingTitle').value,
     description: document.getElementById('meetingDescription').value,
-    room_id: document.getElementById('meetingRoom').value,
-    start_time: document.getElementById('meetingStart').value,
-    end_time: document.getElementById('meetingEnd').value,
+    type: parseInt(document.getElementById('meetingType').value),
+    start_at: document.getElementById('meetingStart').value,
+    end_at: document.getElementById('meetingEnd').value,
   };
+  if (roomVal) body.room_id = parseInt(roomVal);
 
   try {
     if (id) {

@@ -1,3 +1,15 @@
+// Enum trạng thái phòng họp: 1 = available, 0 = unavailable
+const ROOM_STATUS = { AVAILABLE: 1, UNAVAILABLE: 0 };
+const ROOM_STATUS_LABEL = { [ROOM_STATUS.AVAILABLE]: 'Khả dụng', [ROOM_STATUS.UNAVAILABLE]: 'Không khả dụng' };
+
+// Enum trạng thái cuộc họp: 0 = canceled, 1 = scheduled, 2 = completed
+const MEETING_STATUS = { CANCELED: 0, SCHEDULED: 1, COMPLETED: 2 };
+const MEETING_STATUS_LABEL = { [MEETING_STATUS.CANCELED]: 'Đã hủy', [MEETING_STATUS.SCHEDULED]: 'Đã lên lịch', [MEETING_STATUS.COMPLETED]: 'Hoàn thành' };
+
+// Enum loại cuộc họp: 0 = in-person, 1 = online, 2 = hybrid
+const MEETING_TYPE = { IN_PERSON: 0, ONLINE: 1, HYBRID: 2 };
+const MEETING_TYPE_LABEL = { [MEETING_TYPE.IN_PERSON]: 'Trực tiếp', [MEETING_TYPE.ONLINE]: 'Trực tuyến', [MEETING_TYPE.HYBRID]: 'Kết hợp' };
+
 // Cấu hình API cho ứng dụng Office Chatbot
 const API_CONFIG = {
   // Dùng proxy local để tránh CORS

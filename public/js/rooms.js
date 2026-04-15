@@ -52,10 +52,15 @@ function renderRooms(rooms) {
   }
 
   const rows = rooms.map((r) => {
+    const statusLabel = ROOM_STATUS_LABEL[r.status] || 'Không rõ';
+    const statusBadge = r.status === ROOM_STATUS.AVAILABLE
+      ? `<span class="badge badge-active">${statusLabel}</span>`
+      : `<span class="badge badge-inactive">${statusLabel}</span>`;
     return `<tr>
       <td>${r.name || ''}</td>
       <td>${r.capacity || ''} người</td>
       <td>${r.location || ''}</td>
+      <td>${statusBadge}</td>
       <td>${r.description || ''}</td>
       <td>
         <div class="actions-cell">
@@ -74,6 +79,7 @@ function renderRooms(rooms) {
             <th>Tên phòng</th>
             <th>Sức chứa</th>
             <th>Vị trí</th>
+            <th>Trạng thái</th>
             <th>Mô tả</th>
             <th>Thao tác</th>
           </tr>
