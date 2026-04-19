@@ -32,7 +32,23 @@
         <button class="btn btn-primary" onclick="openCreateModal()">+ Tạo cuộc họp</button>
       </div>
 
-      <div id="meetingsContent">
+      <!-- Thanh điều hướng calendar -->
+      <div class="calendar-toolbar">
+        <div class="calendar-nav">
+          <button class="btn-nav" onclick="navigateWeek(-1)">◀</button>
+          <span class="current-date" id="currentDateLabel"></span>
+          <button class="btn-nav" onclick="navigateWeek(1)">▶</button>
+        </div>
+        <div class="calendar-filters">
+          <button class="btn-today" onclick="goToToday()">Hôm nay</button>
+          <select id="filterRoom" onchange="loadCalendarMeetings()">
+            <option value="">Tất cả phòng</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Calendar view -->
+      <div class="calendar-week" id="calendarContainer">
         <div class="loading-overlay">
           <div class="loading-spinner"></div>
           <span>Đang tải dữ liệu...</span>
@@ -59,26 +75,30 @@
             <textarea id="meetingDescription" rows="3" placeholder="Mô tả cuộc họp"></textarea>
           </div>
           <div class="form-group">
-            <label for="meetingRoom">Phòng họp</label>
-            <select id="meetingRoom">
-              <option value="">-- Chọn phòng --</option>
-            </select>
-          </div>
-          <div class="form-group">
             <label for="meetingType">Loại cuộc họp</label>
-            <select id="meetingType" required>
+            <select id="meetingType" required onchange="onMeetingTypeChange()">
               <option value="0">Trực tiếp</option>
               <option value="1">Trực tuyến</option>
               <option value="2">Kết hợp</option>
             </select>
           </div>
+          <div class="form-group" id="roomGroup">
+            <label for="meetingRoom">Phòng họp</label>
+            <select id="meetingRoom">
+              <option value="">-- Chọn phòng --</option>
+            </select>
+          </div>
+          <div class="form-group" id="linkGroup" style="display:none;">
+            <label for="meetingLink">Link cuộc họp</label>
+            <input type="url" id="meetingLink" placeholder="https://meet.google.com/...">
+          </div>
           <div class="form-group">
             <label for="meetingStart">Thời gian bắt đầu</label>
-            <input type="datetime-local" id="meetingStart" required>
+            <input type="datetime-local" id="meetingStart" required onchange="onTimeChange()">
           </div>
           <div class="form-group">
             <label for="meetingEnd">Thời gian kết thúc</label>
-            <input type="datetime-local" id="meetingEnd" required>
+            <input type="datetime-local" id="meetingEnd" required onchange="onTimeChange()">
           </div>
           <input type="hidden" id="meetingId">
         </form>
