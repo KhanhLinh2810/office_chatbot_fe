@@ -57,11 +57,10 @@ function renderRooms(rooms) {
       ? `<span class="badge badge-active">${statusLabel}</span>`
       : `<span class="badge badge-inactive">${statusLabel}</span>`;
     return `<tr>
-      <td>${r.name || ''}</td>
+      <td>${r.number_room || ''}</td>
       <td>${r.capacity || ''} người</td>
-      <td>${r.location || ''}</td>
+      <td>${r.address || ''}</td>
       <td>${statusBadge}</td>
-      <td>${r.description || ''}</td>
       <td>
         <div class="actions-cell">
           <button class="btn btn-sm btn-outline" onclick="editRoom('${r.id}')">Sửa</button>
@@ -76,11 +75,10 @@ function renderRooms(rooms) {
       <table class="data-table">
         <thead>
           <tr>
-            <th>Tên phòng</th>
+            <th>Số phòng</th>
             <th>Sức chứa</th>
-            <th>Vị trí</th>
+            <th>Địa chỉ</th>
             <th>Trạng thái</th>
-            <th>Mô tả</th>
             <th>Thao tác</th>
           </tr>
         </thead>
@@ -109,10 +107,9 @@ async function editRoom(id) {
     if (!room) return;
     document.getElementById('modalTitle').textContent = 'Sửa phòng họp';
     document.getElementById('roomId').value = id;
-    document.getElementById('roomName').value = room.name || '';
+    document.getElementById('roomName').value = room.number_room || '';
     document.getElementById('roomCapacity').value = room.capacity || '';
-    document.getElementById('roomLocation').value = room.location || '';
-    document.getElementById('roomDescription').value = room.description || '';
+    document.getElementById('roomLocation').value = room.address || '';
     document.getElementById('roomModal').classList.add('active');
   } catch (error) {
     showToast('Không thể tải thông tin phòng họp', 'error');
@@ -123,10 +120,9 @@ async function editRoom(id) {
 async function saveRoom() {
   const id = document.getElementById('roomId').value;
   const body = {
-    name: document.getElementById('roomName').value,
+    number_room: document.getElementById('roomName').value,
     capacity: parseInt(document.getElementById('roomCapacity').value),
-    location: document.getElementById('roomLocation').value,
-    description: document.getElementById('roomDescription').value,
+    address: document.getElementById('roomLocation').value,
   };
 
   try {

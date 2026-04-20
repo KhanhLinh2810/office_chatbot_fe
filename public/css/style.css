@@ -703,7 +703,8 @@ a:hover { text-decoration: underline; }
 .calendar-event {
   position: absolute;
   left: 2px;
-  right: 2px;
+  right: auto;
+  width: calc(100% - 4px);
   background: var(--red);
   color: var(--white);
   border-radius: 4px;

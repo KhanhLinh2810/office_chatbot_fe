@@ -110,7 +110,7 @@ async function handleRoomQuery() {
       return 'Hiện tại chưa có phòng họp nào trong hệ thống.';
     }
     const list = rooms.map((r) => {
-      return `• <b>${r.name}</b> - Sức chứa: ${r.capacity} người`;
+      return `• <b>${r.number_room}</b> - Sức chứa: ${r.capacity} người`;
     });
     return `Danh sách phòng họp:\n${list.join('\n')}`;
   } catch (error) {

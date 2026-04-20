@@ -124,7 +124,7 @@ async function loadFilterRooms() {
     const rooms = await apiCall(`/rooms/?status=${ROOM_STATUS.AVAILABLE}`);
     const select = document.getElementById('filterRoom');
     (rooms || []).forEach((r) => {
-      select.innerHTML += `<option value="${r.id}">${r.name}</option>`;
+      select.innerHTML += `<option value="${r.id}">${r.number_room}</option>`;
     });
   } catch (error) {
     // Bỏ qua
@@ -184,6 +184,12 @@ async function loadCalendarMeetings() {
       return s >= weekStart && s <= weekEnd;
     });
 
+    // Lọc client-side theo loại cuộc họp
+    const filterType = document.getElementById('filterType').value;
+    if (filterType !== '') {
+      meetings = meetings.filter((m) => String(m.type) === filterType);
+    }
+
     removeCalendarOverlay();
     renderCalendarEvents(meetings);
 
@@ -197,7 +203,28 @@ async function loadCalendarMeetings() {
   }
 }
 
-// Render sự kiện lên calendar
+// Nhóm các cuộc họp bị trùng giờ trong cùng ngày
+function groupOverlappingEvents(events) {
+  if (events.length === 0) return [];
+  // Sắp xếp theo thời gian bắt đầu
+  const sorted = [...events].sort((a, b) => a.startMin - b.startMin);
+  const groups = [];
+  let currentGroup = [sorted[0]];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const maxEnd = Math.max(...currentGroup.map((e) => e.endMin));
+    if (sorted[i].startMin < maxEnd) {
+      currentGroup.push(sorted[i]);
+    } else {
+      groups.push(currentGroup);
+      currentGroup = [sorted[i]];
+    }
+  }
+  groups.push(currentGroup);
+  return groups;
+}
+
+// Render sự kiện lên calendar (có xử lý overlap)
 function renderCalendarEvents(meetings) {
   // Xóa event cũ
   document.querySelectorAll('.calendar-event').forEach((el) => el.remove());
@@ -205,42 +232,60 @@ function renderCalendarEvents(meetings) {
   const days = getWeekDays(currentWeekStart);
   const START_HOUR = 6;
 
+  // Nhóm meetings theo ngày
+  const byDay = {};
   meetings.forEach((m) => {
     const start = new Date(m.start_at);
     const end = new Date(m.end_at);
-
-    // Tìm cột ngày tương ứng
     const dayIndex = days.findIndex((d) => {
       return d.getDate() === start.getDate()
         && d.getMonth() === start.getMonth()
         && d.getFullYear() === start.getFullYear();
     });
     if (dayIndex === -1) return;
+    if (!byDay[dayIndex]) byDay[dayIndex] = [];
+    const startMin = (start.getHours() - START_HOUR) * 60 + start.getMinutes();
+    const endMin = (end.getHours() - START_HOUR) * 60 + end.getMinutes();
+    byDay[dayIndex].push({ ...m, start, end, startMin, endMin });
+  });
 
+  // Render từng ngày
+  Object.keys(byDay).forEach((dayIndex) => {
     const col = document.getElementById(`dayCol${dayIndex}`);
     if (!col) return;
-
-    // Tính vị trí top và height (48px = 1 giờ)
-    const startMinutes = (start.getHours() - START_HOUR) * 60 + start.getMinutes();
-    const endMinutes = (end.getHours() - START_HOUR) * 60 + end.getMinutes();
-    const top = (startMinutes / 60) * 48;
-    const height = Math.max(((endMinutes - startMinutes) / 60) * 48, 20);
-
-    // Class theo loại
-    let typeClass = '';
-    if (m.type === MEETING_TYPE.ONLINE) typeClass = 'type-online';
-    else if (m.type === MEETING_TYPE.HYBRID) typeClass = 'type-hybrid';
-
-    const timeStr = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - ${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
-
-    const event = document.createElement('div');
-    event.className = `calendar-event ${typeClass}`;
-    event.style.top = `${top}px`;
-    event.style.height = `${height}px`;
-    event.innerHTML = `<div class="event-title">${m.title || ''}</div><div class="event-time">${timeStr}</div>`;
-    event.onclick = () => editMeeting(m.id);
-    col.appendChild(event);
+    const groups = groupOverlappingEvents(byDay[dayIndex]);
+    groups.forEach((group) => {
+      const total = group.length;
+      group.forEach((m, idx) => {
+        renderSingleEvent(col, m, total, idx);
+      });
+    });
   });
+}
+
+// Render 1 event với vị trí cột overlap
+function renderSingleEvent(col, m, totalCols, colIndex) {
+  const top = (m.startMin / 60) * 48;
+  const height = Math.max(((m.endMin - m.startMin) / 60) * 48, 20);
+
+  let typeClass = '';
+  if (m.type === MEETING_TYPE.ONLINE) typeClass = 'type-online';
+  else if (m.type === MEETING_TYPE.HYBRID) typeClass = 'type-hybrid';
+
+  const timeStr = `${String(m.start.getHours()).padStart(2, '0')}:${String(m.start.getMinutes()).padStart(2, '0')} - ${String(m.end.getHours()).padStart(2, '0')}:${String(m.end.getMinutes()).padStart(2, '0')}`;
+
+  const widthPercent = 100 / totalCols;
+  const leftPercent = widthPercent * colIndex;
+
+  const event = document.createElement('div');
+  event.className = `calendar-event ${typeClass}`;
+  event.style.top = `${top}px`;
+  event.style.height = `${height}px`;
+  event.style.left = `${leftPercent}%`;
+  event.style.width = `calc(${widthPercent}% - 2px)`;
+  event.innerHTML = `<div class="event-title">${m.title || ''}</div><div class="event-time">${timeStr}</div>`;
+  event.onclick = () => editMeeting(m.id);
+  col.appendChild(event);
 }
 
 // Tải danh sách phòng cho dropdown trong modal
@@ -257,8 +302,8 @@ async function loadRoomsForSelect() {
     const currentVal = select.value;
     select.innerHTML = '<option value="">-- Chọn phòng --</option>';
     (rooms || []).forEach((r) => {
-      const location = r.location || 'Chưa rõ';
-      const name = r.name || '';
+      const location = r.address || 'Chưa rõ';
+      const name = r.number_room || '';
       const capacity = r.capacity || 0;
       select.innerHTML += `<option value="${r.id}">${location} - ${name} - ${capacity} người</option>`;
     });

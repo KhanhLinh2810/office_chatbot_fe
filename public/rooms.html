@@ -51,20 +51,16 @@
       <div class="modal-body">
         <form id="roomForm">
           <div class="form-group">
-            <label for="roomName">Tên phòng</label>
-            <input type="text" id="roomName" placeholder="Nhập tên phòng họp" required>
+            <label for="roomName">Số phòng</label>
+            <input type="text" id="roomName" placeholder="Nhập số phòng họp" required>
           </div>
           <div class="form-group">
             <label for="roomCapacity">Sức chứa</label>
             <input type="number" id="roomCapacity" placeholder="Số người tối đa" min="1" required>
           </div>
           <div class="form-group">
-            <label for="roomLocation">Vị trí</label>
+            <label for="roomLocation">Địa chỉ</label>
             <input type="text" id="roomLocation" placeholder="Ví dụ: Tầng 3, Tòa A">
-          </div>
-          <div class="form-group">
-            <label for="roomDescription">Mô tả</label>
-            <textarea id="roomDescription" rows="3" placeholder="Mô tả tiện nghi phòng họp"></textarea>
           </div>
           <input type="hidden" id="roomId">
         </form>
