@@ -419,9 +419,10 @@ async function editMeeting(id) {
     // Load danh sách người tham gia từ user_meetings
     if (meeting.user_meetings && Array.isArray(meeting.user_meetings)) {
       meeting.user_meetings.forEach((um) => {
+        const userId = Number(um.user_id || (um.user && um.user.id) || um.id);
         const u = um.user || um;
         const name = `${u.first_name || ''} ${u.last_name || ''}`.trim();
-        addParticipant(u.id, name, u.email || '');
+        addParticipant(userId, name, u.email || '');
       });
       // Lưu danh sách gốc để so sánh khi cập nhật
       originalParticipantIds = selectedParticipants.map((p) => p.id);
@@ -553,10 +554,11 @@ async function fetchSearchUsers(query) {
 
 // Thêm user vào danh sách tham gia
 function addParticipant(id, name, email) {
-  if (selectedParticipants.some((p) => p.id === id)) return;
-  selectedParticipants.push({ id, name, email });
+  const numId = Number(id);
+  if (selectedParticipants.some((p) => p.id === numId)) return;
+  selectedParticipants.push({ id: numId, name, email });
   // Nếu user từng bị xóa, bỏ khỏi danh sách xóa
-  deletedParticipantIds = deletedParticipantIds.filter((did) => did !== id);
+  deletedParticipantIds = deletedParticipantIds.filter((did) => did !== numId);
   renderParticipants();
   document.getElementById('participantSearch').value = '';
   document.getElementById('searchResults').classList.remove('active');
@@ -564,11 +566,12 @@ function addParticipant(id, name, email) {
 
 // Xóa user khỏi danh sách tham gia
 function removeParticipant(id) {
-  selectedParticipants = selectedParticipants.filter((p) => p.id !== id);
+  const numId = Number(id);
+  selectedParticipants = selectedParticipants.filter((p) => p.id !== numId);
   // Nếu user thuộc danh sách gốc, thêm vào deleted
-  if (originalParticipantIds.includes(id)) {
-    if (!deletedParticipantIds.includes(id)) {
-      deletedParticipantIds.push(id);
+  if (originalParticipantIds.includes(numId)) {
+    if (!deletedParticipantIds.includes(numId)) {
+      deletedParticipantIds.push(numId);
     }
   }
   renderParticipants();
