@@ -6,6 +6,25 @@ let currentWeekStart = getMonday(new Date());
 // Tên thứ viết tắt tiếng Việt
 const DAY_NAMES = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
+// Tạo danh sách giờ cho dropdown (06:00 - 22:00, bước 30 phút)
+function populateTimeSelects() {
+  const startSel = document.getElementById('meetingStartTime');
+  const endSel = document.getElementById('meetingEndTime');
+  startSel.innerHTML = '';
+  endSel.innerHTML = '';
+  for (let h = 6; h <= 22; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      if (h === 22 && m > 0) break;
+      const val = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      startSel.innerHTML += `<option value="${val}">${val}</option>`;
+      endSel.innerHTML += `<option value="${val}">${val}</option>`;
+    }
+  }
+  // Mặc định bắt đầu 08:00, kết thúc 09:00
+  startSel.value = '08:00';
+  endSel.value = '09:00';
+}
+
 // Kiểm tra đăng nhập
 (function checkAuth() {
   if (!getAuthToken()) {
@@ -288,10 +307,18 @@ function renderSingleEvent(col, m, totalCols, colIndex) {
   col.appendChild(event);
 }
 
+// Ghép ngày + giờ thành datetime string
+function getMeetingDatetime(timeFieldId) {
+  const date = document.getElementById('meetingDate').value;
+  const time = document.getElementById(timeFieldId).value;
+  if (!date || !time) return '';
+  return `${date}T${time}`;
+}
+
 // Tải danh sách phòng cho dropdown trong modal
 async function loadRoomsForSelect() {
-  const startAt = document.getElementById('meetingStart').value;
-  const endAt = document.getElementById('meetingEnd').value;
+  const startAt = getMeetingDatetime('meetingStartTime');
+  const endAt = getMeetingDatetime('meetingEndTime');
   let query = `?status=${ROOM_STATUS.AVAILABLE}`;
   if (startAt) query += `&start_at=${encodeURIComponent(startAt)}`;
   if (endAt) query += `&end_at=${encodeURIComponent(endAt)}`;
@@ -323,6 +350,11 @@ function openCreateModal() {
   document.getElementById('modalTitle').textContent = 'Tạo cuộc họp mới';
   document.getElementById('meetingForm').reset();
   document.getElementById('meetingId').value = '';
+  populateTimeSelects();
+  resetParticipants();
+  // Đặt ngày mặc định là hôm nay
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('meetingDate').value = today;
   loadRoomsForSelect();
   onMeetingTypeChange();
   document.getElementById('meetingModal').classList.add('active');
@@ -358,15 +390,20 @@ async function editMeeting(id) {
   try {
     const meeting = await apiCall(`/meetings/${id}`);
     if (!meeting) return;
+    populateTimeSelects();
+    resetParticipants();
     document.getElementById('modalTitle').textContent = 'Sửa cuộc họp';
     document.getElementById('meetingId').value = id;
     document.getElementById('meetingTitle').value = meeting.title || '';
     document.getElementById('meetingDescription').value = meeting.description || '';
     if (meeting.start_at) {
-      document.getElementById('meetingStart').value = meeting.start_at.slice(0, 16);
+      const startDt = new Date(meeting.start_at);
+      document.getElementById('meetingDate').value = startDt.toISOString().slice(0, 10);
+      document.getElementById('meetingStartTime').value = `${String(startDt.getHours()).padStart(2, '0')}:${String(startDt.getMinutes()).padStart(2, '0')}`;
     }
     if (meeting.end_at) {
-      document.getElementById('meetingEnd').value = meeting.end_at.slice(0, 16);
+      const endDt = new Date(meeting.end_at);
+      document.getElementById('meetingEndTime').value = `${String(endDt.getHours()).padStart(2, '0')}:${String(endDt.getMinutes()).padStart(2, '0')}`;
     }
     await loadRoomsForSelect();
     if (meeting.room_id) {
@@ -379,6 +416,16 @@ async function editMeeting(id) {
     if (meeting.link) {
       document.getElementById('meetingLink').value = meeting.link;
     }
+    // Load danh sách người tham gia từ user_meetings
+    if (meeting.user_meetings && Array.isArray(meeting.user_meetings)) {
+      meeting.user_meetings.forEach((um) => {
+        const u = um.user || um;
+        const name = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+        addParticipant(u.id, name, u.email || '');
+      });
+      // Lưu danh sách gốc để so sánh khi cập nhật
+      originalParticipantIds = selectedParticipants.map((p) => p.id);
+    }
     document.getElementById('meetingModal').classList.add('active');
   } catch (error) {
     showToast('Không thể tải thông tin cuộc họp', 'error');
@@ -390,15 +437,36 @@ async function saveMeeting() {
   const id = document.getElementById('meetingId').value;
   const roomVal = document.getElementById('meetingRoom').value;
   const linkVal = document.getElementById('meetingLink').value;
+  const startAt = getMeetingDatetime('meetingStartTime');
+  const endAt = getMeetingDatetime('meetingEndTime');
+
+  // Validate giờ kết thúc phải sau giờ bắt đầu
+  if (startAt && endAt && startAt >= endAt) {
+    showToast('Giờ kết thúc phải sau giờ bắt đầu', 'error');
+    return;
+  }
+
   const body = {
     title: document.getElementById('meetingTitle').value,
     description: document.getElementById('meetingDescription').value,
     type: parseInt(document.getElementById('meetingType').value),
-    start_at: document.getElementById('meetingStart').value,
-    end_at: document.getElementById('meetingEnd').value,
+    start_at: startAt,
+    end_at: endAt,
   };
   if (roomVal) body.room_id = parseInt(roomVal);
   if (linkVal) body.link = linkVal;
+
+  if (id) {
+    // Cập nhật: gửi danh sách user mới thêm và user cần xóa
+    const newIds = getNewParticipantIds();
+    if (newIds.length > 0) body.list_user_id = newIds;
+    if (deletedParticipantIds.length > 0) body.list_delete_user_id = deletedParticipantIds;
+  } else {
+    // Tạo mới: gửi toàn bộ user_ids
+    if (selectedParticipants.length > 0) {
+      body.list_user_id = selectedParticipants.map((p) => p.id);
+    }
+  }
 
   try {
     if (id) {
@@ -425,4 +493,115 @@ async function deleteMeeting(id) {
   } catch (error) {
     showToast(error.message || 'Xóa thất bại', 'error');
   }
+}
+
+// === QUẢN LÝ NGƯỜI THAM GIA ===
+
+// Danh sách user hiện tại trên UI
+let selectedParticipants = [];
+// Danh sách user gốc từ API (khi edit)
+let originalParticipantIds = [];
+// Danh sách user bị xóa (khi edit)
+let deletedParticipantIds = [];
+
+// Timer debounce cho tìm kiếm
+let searchTimer = null;
+
+// Tìm kiếm user theo email (debounce 300ms)
+function searchUsers() {
+  clearTimeout(searchTimer);
+  const query = document.getElementById('participantSearch').value.trim();
+  const container = document.getElementById('searchResults');
+
+  if (query.length < 2) {
+    container.classList.remove('active');
+    container.innerHTML = '';
+    return;
+  }
+
+  searchTimer = setTimeout(() => fetchSearchUsers(query), 300);
+}
+
+// Gọi API tìm user theo email
+async function fetchSearchUsers(query) {
+  const container = document.getElementById('searchResults');
+  try {
+    const data = await apiCall(`/users/?email=${encodeURIComponent(query)}`);
+    const users = Array.isArray(data) ? data : (data && data.items ? data.items : []);
+
+    // Lọc bỏ user đã được chọn
+    const filtered = users.filter((u) => {
+      return !selectedParticipants.some((p) => p.id === u.id);
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="search-result-item">Không tìm thấy</div>';
+    } else {
+      container.innerHTML = filtered.map((u) => {
+        const name = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+        return `<div class="search-result-item" onclick="addParticipant(${u.id}, '${name.replace(/'/g, "\\'")}', '${u.email}')">
+          ${name} <span class="result-email">(${u.email})</span>
+        </div>`;
+      }).join('');
+    }
+    container.classList.add('active');
+  } catch (error) {
+    container.innerHTML = '<div class="search-result-item">Lỗi tìm kiếm</div>';
+    container.classList.add('active');
+  }
+}
+
+// Thêm user vào danh sách tham gia
+function addParticipant(id, name, email) {
+  if (selectedParticipants.some((p) => p.id === id)) return;
+  selectedParticipants.push({ id, name, email });
+  // Nếu user từng bị xóa, bỏ khỏi danh sách xóa
+  deletedParticipantIds = deletedParticipantIds.filter((did) => did !== id);
+  renderParticipants();
+  document.getElementById('participantSearch').value = '';
+  document.getElementById('searchResults').classList.remove('active');
+}
+
+// Xóa user khỏi danh sách tham gia
+function removeParticipant(id) {
+  selectedParticipants = selectedParticipants.filter((p) => p.id !== id);
+  // Nếu user thuộc danh sách gốc, thêm vào deleted
+  if (originalParticipantIds.includes(id)) {
+    if (!deletedParticipantIds.includes(id)) {
+      deletedParticipantIds.push(id);
+    }
+  }
+  renderParticipants();
+}
+
+// Render danh sách tag người tham gia
+function renderParticipants() {
+  const container = document.getElementById('participantList');
+  if (selectedParticipants.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = selectedParticipants.map((p) => {
+    return `<span class="participant-tag">
+      ${p.name} (${p.email})
+      <button type="button" class="remove-btn" onclick="removeParticipant(${p.id})">&times;</button>
+    </span>`;
+  }).join('');
+}
+
+// Reset danh sách người tham gia
+function resetParticipants() {
+  selectedParticipants = [];
+  originalParticipantIds = [];
+  deletedParticipantIds = [];
+  renderParticipants();
+  document.getElementById('participantSearch').value = '';
+  document.getElementById('searchResults').classList.remove('active');
+}
+
+// Lấy danh sách user_id mới (không có trong gốc)
+function getNewParticipantIds() {
+  return selectedParticipants
+    .map((p) => p.id)
+    .filter((id) => !originalParticipantIds.includes(id));
 }

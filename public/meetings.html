@@ -99,14 +99,30 @@
             <input type="url" id="meetingLink" placeholder="https://meet.google.com/...">
           </div>
           <div class="form-group">
-            <label for="meetingStart">Thời gian bắt đầu</label>
-            <input type="datetime-local" id="meetingStart" required onchange="onTimeChange()">
+            <label for="meetingDate">Ngày họp</label>
+            <input type="date" id="meetingDate" required>
           </div>
-          <div class="form-group">
-            <label for="meetingEnd">Thời gian kết thúc</label>
-            <input type="datetime-local" id="meetingEnd" required onchange="onTimeChange()">
+          <div class="form-row">
+            <div class="form-group form-half">
+              <label for="meetingStartTime">Giờ bắt đầu</label>
+              <select id="meetingStartTime" required onchange="onTimeChange()"></select>
+            </div>
+            <div class="form-group form-half">
+              <label for="meetingEndTime">Giờ kết thúc</label>
+              <select id="meetingEndTime" required onchange="onTimeChange()"></select>
+            </div>
           </div>
           <input type="hidden" id="meetingId">
+
+          <!-- Người tham gia -->
+          <div class="form-group">
+            <label>Người tham gia</label>
+            <div class="participant-search">
+              <input type="text" id="participantSearch" placeholder="Tìm theo email..." oninput="searchUsers()">
+              <div class="search-results" id="searchResults"></div>
+            </div>
+            <div class="participant-list" id="participantList"></div>
+          </div>
         </form>
       </div>
       <div class="modal-footer">

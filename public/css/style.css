@@ -77,6 +77,15 @@ a:hover { text-decoration: underline; }
   margin-bottom: 1.25rem;
 }
 
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-half {
+  flex: 1;
+}
+
 .form-group label {
   display: block;
   font-weight: 600;
@@ -742,6 +751,82 @@ a:hover { text-decoration: underline; }
 }
 
 /* Overlay loading/empty trên calendar body */
+
+/* === PARTICIPANT PICKER === */
+.participant-search {
+  position: relative;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 10;
+  display: none;
+  box-shadow: var(--shadow);
+}
+
+.search-results.active {
+  display: block;
+}
+
+.search-result-item {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+
+.search-result-item:hover {
+  background: var(--gray-100);
+}
+
+.search-result-item .result-email {
+  color: var(--gray-500);
+  font-size: 0.8rem;
+}
+
+.participant-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.participant-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 20px;
+  padding: 0.3rem 0.6rem 0.3rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--gray-700);
+}
+
+.participant-tag .remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-500);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+}
+
+.participant-tag .remove-btn:hover {
+  color: var(--danger);
+}
+
+/* Overlay loading/empty trên calendar body (tiếp) */
 .calendar-loading-overlay,
 .calendar-empty-overlay {
   position: absolute;
