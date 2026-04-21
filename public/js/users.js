@@ -29,7 +29,7 @@ async function loadUsers() {
   try {
     // API trả về danh sách qua calendar hoặc endpoint khác
     // Dùng endpoint get-calendar để lấy danh sách user
-    const users = await apiCall('/users/get-calendar');
+    const users = await apiCall('/users/');
     renderUsers(Array.isArray(users) ? users : []);
   } catch (error) {
     content.innerHTML = `
@@ -54,11 +54,13 @@ function renderUsers(users) {
   }
 
   const rows = users.map((u) => {
-    const roleBadge = u.role === 'admin'
+    const name = `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email;
+    const roleVal = u.role === 1 || u.role === 'admin';
+    const roleBadge = roleVal
       ? '<span class="badge badge-admin">Quản trị</span>'
       : '<span class="badge badge-active">Người dùng</span>';
     return `<tr>
-      <td>${u.full_name || u.name || ''}</td>
+      <td>${name}</td>
       <td>${u.email || ''}</td>
       <td>${roleBadge}</td>
       <td>
@@ -92,6 +94,7 @@ function openCreateModal() {
   document.getElementById('userForm').reset();
   document.getElementById('userId').value = '';
   document.getElementById('passwordGroup').style.display = 'block';
+  loadManagerSelect();
   document.getElementById('userModal').classList.add('active');
 }
 
@@ -100,22 +103,55 @@ function closeModal() {
   document.getElementById('userModal').classList.remove('active');
 }
 
+// Tải danh sách user cho dropdown manager
+async function loadManagerSelect(currentManagerId) {
+  const select = document.getElementById('userManager');
+  select.innerHTML = '<option value="">-- Không có --</option>';
+  try {
+    const users = await apiCall('/users/');
+    const list = Array.isArray(users) ? users : [];
+    list.forEach((u) => {
+      const name = `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email;
+      select.innerHTML += `<option value="${u.id}">${name} (${u.email})</option>`;
+    });
+    if (currentManagerId) select.value = currentManagerId;
+  } catch (error) {
+    // Bỏ qua lỗi
+  }
+}
+
 // Sửa người dùng
-function editUser(id) {
-  document.getElementById('modalTitle').textContent = 'Sửa người dùng';
-  document.getElementById('userId').value = id;
-  document.getElementById('passwordGroup').style.display = 'none';
-  document.getElementById('userModal').classList.add('active');
+async function editUser(id) {
+  try {
+    const user = await apiCall(`/users/${id}`);
+    if (!user) return;
+    document.getElementById('modalTitle').textContent = 'Sửa người dùng';
+    document.getElementById('userId').value = id;
+    document.getElementById('userFirstName').value = user.first_name || '';
+    document.getElementById('userLastName').value = user.last_name || '';
+    document.getElementById('userEmail').value = user.email || '';
+    document.getElementById('passwordGroup').style.display = 'none';
+    // Role: 0 = user, 1 = admin
+    const roleVal = (user.role === 1 || user.role === 'admin') ? '1' : '0';
+    document.getElementById('userRoleSelect').value = roleVal;
+    await loadManagerSelect(user.manager_id || '');
+    document.getElementById('userModal').classList.add('active');
+  } catch (error) {
+    showToast('Không thể tải thông tin người dùng', 'error');
+  }
 }
 
 // Lưu người dùng
 async function saveUser() {
   const id = document.getElementById('userId').value;
+  const managerVal = document.getElementById('userManager').value;
   const body = {
-    full_name: document.getElementById('userFullName').value,
+    first_name: document.getElementById('userFirstName').value,
+    last_name: document.getElementById('userLastName').value,
     email: document.getElementById('userEmail').value,
-    role: document.getElementById('userRole').value,
+    role: parseInt(document.getElementById('userRoleSelect').value),
   };
+  if (managerVal) body.manager_id = parseInt(managerVal);
 
   // Thêm mật khẩu nếu tạo mới
   if (!id) {
