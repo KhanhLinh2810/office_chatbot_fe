@@ -46,10 +46,14 @@ if (loginForm) {
           return;
         }
         setAuthToken(token);
-        // Lưu thông tin user nếu có
-        const userInfo = data.user || data.user_info || null;
-        if (userInfo) {
-          localStorage.setItem('user_info', JSON.stringify(userInfo));
+        // Lấy thông tin user từ API /users/me
+        try {
+          const userInfo = await apiCall('/users/me');
+          if (userInfo) {
+            localStorage.setItem('user_info', JSON.stringify(userInfo));
+          }
+        } catch (err) {
+          // Bỏ qua nếu không lấy được user info
         }
         window.location.href = '/chat.html';
       }
