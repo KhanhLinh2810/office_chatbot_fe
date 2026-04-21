@@ -110,6 +110,7 @@ async function editRoom(id) {
     document.getElementById('roomName').value = room.number_room || '';
     document.getElementById('roomCapacity').value = room.capacity || '';
     document.getElementById('roomLocation').value = room.address || '';
+    document.getElementById('roomStatus').value = room.status !== undefined ? room.status : 1;
     document.getElementById('roomModal').classList.add('active');
   } catch (error) {
     showToast('Không thể tải thông tin phòng họp', 'error');
@@ -123,6 +124,7 @@ async function saveRoom() {
     number_room: document.getElementById('roomName').value,
     capacity: parseInt(document.getElementById('roomCapacity').value),
     address: document.getElementById('roomLocation').value,
+    status: parseInt(document.getElementById('roomStatus').value),
   };
 
   try {
